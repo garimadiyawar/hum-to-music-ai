@@ -1,0 +1,40 @@
+# ─── Core ML ────────────────────────────────────────────────────────────────
+torch>=2.1.0
+torchaudio>=2.1.0
+torchvision>=0.16.0
+
+# ─── Audio Processing ────────────────────────────────────────────────────────
+librosa>=0.10.1
+soundfile>=0.12.1
+audioread>=3.0.1
+resampy>=0.4.2
+pydub>=0.25.1
+scipy>=1.11.0
+
+# ─── MIDI / Music ────────────────────────────────────────────────────────────
+pretty_midi>=0.2.10
+mido>=1.3.0
+music21>=9.1.0
+pyfluidsynth>=1.3.3
+
+# ─── Data / Science ──────────────────────────────────────────────────────────
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# ─── Config / Utilities ──────────────────────────────────────────────────────
+PyYAML>=6.0
+tqdm>=4.65.0
+tensorboard>=2.14.0
+einops>=0.7.0
+omegaconf>=2.3.0
+
+# ─── Pitch Detection ─────────────────────────────────────────────────────────
+crepe>=0.0.13          # CNN-based pitch detection
+# pyworld>=0.3.4       # optional WORLD vocoder (C-ext, may need compiler)
+
+# ─── Packaging ───────────────────────────────────────────────────────────────
+click>=8.1.0
+loguru>=0.7.0

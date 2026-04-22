@@ -1,0 +1,123 @@
+# =============================================================================
+#  Hum-to-Music  —  Master Configuration
+# =============================================================================
+
+audio:
+  sample_rate: 22050          # Hz
+  hop_length: 256             # STFT hop
+  n_fft: 2048                 # FFT window
+  n_mels: 128                 # Mel bins
+  fmin: 50.0                  # Lowest frequency (Hz)
+  fmax: 2000.0                # Highest frequency (Hz)
+  max_duration: 30.0          # Max clip length (seconds)
+  min_note_duration: 0.05     # Minimum note length for segmentation
+
+pitch:
+  method: "crepe"             # "crepe" | "yin" | "pyin"
+  confidence_threshold: 0.6   # Below this → unvoiced
+  frame_length: 1024
+  hop_length: 256
+
+# ─── Melody Transcription ────────────────────────────────────────────────────
+transcription:
+  cnn_channels: [32, 64, 128, 256]
+  cnn_kernel: 3
+  d_model: 512
+  nhead: 8
+  num_encoder_layers: 6
+  num_decoder_layers: 6
+  dim_feedforward: 2048
+  dropout: 0.1
+  max_seq_len: 512
+  vocab_size: 130             # 128 MIDI + SOS + EOS
+  sos_token: 128
+  eos_token: 129
+
+# ─── Harmony Generator ───────────────────────────────────────────────────────
+harmony:
+  d_model: 256
+  nhead: 4
+  num_layers: 4
+  dim_feedforward: 1024
+  dropout: 0.1
+  chord_vocab_size: 73        # 12 roots × 6 types + no-chord
+  max_seq_len: 256
+
+# ─── Arrangement Model ───────────────────────────────────────────────────────
+arrangement:
+  d_model: 512
+  nhead: 8
+  num_layers: 8
+  dim_feedforward: 2048
+  dropout: 0.1
+  max_seq_len: 1024
+  instrument_vocab: 128       # GM instruments
+  num_instruments: 5          # bass, drums, piano, strings, synth
+
+# ─── Composition Engine ──────────────────────────────────────────────────────
+composition:
+  structure: ["intro", "verse", "chorus", "verse", "chorus", "outro"]
+  beats_per_bar: 4
+  default_tempo: 120          # BPM
+  intro_bars: 4
+  verse_bars: 8
+  chorus_bars: 8
+  outro_bars: 4
+
+# ─── Training ────────────────────────────────────────────────────────────────
+training:
+  transcription:
+    epochs: 100
+    batch_size: 16
+    lr: 0.0001
+    scheduler: "cosine"
+    warmup_steps: 1000
+    grad_clip: 1.0
+    checkpoint_dir: "checkpoints/transcription"
+    log_interval: 50
+
+  harmony:
+    epochs: 80
+    batch_size: 32
+    lr: 0.0003
+    scheduler: "cosine"
+    warmup_steps: 500
+    grad_clip: 1.0
+    checkpoint_dir: "checkpoints/harmony"
+    log_interval: 50
+
+  arrangement:
+    epochs: 120
+    batch_size: 8
+    lr: 0.0001
+    scheduler: "cosine"
+    warmup_steps: 2000
+    grad_clip: 1.0
+    checkpoint_dir: "checkpoints/arrangement"
+    log_interval: 50
+
+# ─── Datasets ────────────────────────────────────────────────────────────────
+datasets:
+  maestro_path: "data/raw/maestro"
+  lakh_path: "data/raw/lakh"
+  medleydb_path: "data/raw/medleydb"
+  cache_dir: "data/cache"
+  val_split: 0.1
+  test_split: 0.05
+
+# ─── Inference ───────────────────────────────────────────────────────────────
+inference:
+  device: "cuda"              # "cuda" | "cpu" | "mps"
+  transcription_ckpt: "checkpoints/transcription/best.pt"
+  harmony_ckpt: "checkpoints/harmony/best.pt"
+  arrangement_ckpt: "checkpoints/arrangement/best.pt"
+  soundfont_path: "assets/GeneralUser_GS.sf2"
+  output_dir: "outputs"
+  beam_size: 5                # Beam search width
+  temperature: 0.85           # Sampling temperature
+
+# ─── MIDI ────────────────────────────────────────────────────────────────────
+midi:
+  resolution: 480             # ticks per quarter note
+  default_velocity: 80
+  tempo: 120
