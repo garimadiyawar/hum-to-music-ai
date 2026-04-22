@@ -5,40 +5,84 @@ __pycache__/
 *.pyd
 *.so
 
-# Virtual environments
-venv/
-.env/
-.venv/
-
-# VS Code / editors
-.vscode/
-.idea/
-
-# Jupyter
-.ipynb_checkpoints/
-
 # History folders
 .history/
 
-# OS files
-.DS_Store
-Thumbs.db
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+.env.*
 
-# Build / packaging
+# =========================
+# AI / ML project files
+# =========================
+
+# Model checkpoints
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+*.h5
+
+# Datasets
+data/raw/
+data/datasets/
+
+# Experiment outputs
+outputs/
+results/
+
+# =========================
+# Node / Expo / React Native
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo local state
+.expo/
+
+# Expo build output
+dist/
+.web-build/
+
+# React Native
+android/
+ios/
+
+# =========================
+# Build artifacts
+# =========================
 build/
 dist/
 *.egg-info/
 
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Editors
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS junk
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
 # Logs
+# =========================
 *.log
 
-# Model checkpoints
-checkpoints/
-
-# Dataset folders
-data/raw/
-data/datasets/
-
-# Output files
-outputs/
-results/
+*.onnx
+*.tflite
+*.safetensors

@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Hum",
+    "slug": "humming-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F5E6D3"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Hum needs microphone access to record your melody."
+      }
+    },
+    "android": {
+      "package": "com.hum.app",
+      "permissions": ["RECORD_AUDIO"]
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Hum to access your microphone to record melodies."
+        }
+      ]
+    ]
+  }
+}

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hum App — Design Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:         #F5E6D3;
+    --surface:    #EDD9BF;
+    --raised:     #E8CFAF;
+    --ink:        #2A1A0E;
+    --ink-mid:    #5C3A21;
+    --ink-light:  #8B6043;
+    --ink-faint:  #C4A882;
+    --accent:     #5C3A21;
+    --accent-deep:#3B2010;
+    --accent-warm:#8B5E3C;
+    --highlight:  #D7BFA6;
+    --border:     #C9AB8A;
+    --border-lt:  #DEC9AE;
+    --danger:     #9B3A2A;
+    --success:    #4A6741;
+  }
+
+  body {
+    background: #2A1A0E;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
+    gap: 40px;
+    flex-wrap: wrap;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Phone shell */
+  .phone {
+    width: 375px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 10px #1a0e06,
+      0 0 0 12px #3d2010,
+      0 40px 80px rgba(0,0,0,0.6);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* Notch */
+  .notch {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 126px; height: 34px;
+    background: #1a0e06;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+  }
+
+  .screen {
+    padding: 60px 32px 48px;
+    min-height: 812px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    position: relative;
+  }
+
+  /* ── Header */
+  .header { text-align: center; }
+  .wordmark {
+    font-family: Georgia, serif;
+    font-size: 52px;
+    color: var(--ink-mid);
+    letter-spacing: 18px;
+    font-style: italic;
+    line-height: 1;
+  }
+  .tagline {
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 3px;
+    margin-top: 4px;
+  }
+  .pixels {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .pixel {
+    width: 6px; height: 6px;
+    background: var(--accent);
+  }
+
+  /* ── State label */
+  .state-label {
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 3px;
+    text-align: center;
+  }
+
+  /* ── Duration */
+  .duration {
+    font-size: 28px;
+    color: var(--ink-mid);
+    letter-spacing: 4px;
+    min-width: 90px;
+    text-align: center;
+  }
+
+  /* ── Record button */
+  .record-wrap {
+    position: relative;
+    width: 160px; height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    opacity: 0;
+    animation: pulse 0.9s ease-out infinite;
+  }
+  .pulse-ring:nth-child(2) { animation-delay: 0.45s; }
+
+  @keyframes pulse {
+    0%   { transform: scale(1);    opacity: 0.35; }
+    100% { transform: scale(1.55); opacity: 0;    }
+  }
+
+  .outer-ring {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    box-shadow: 0 6px 18px rgba(42,26,14,0.28);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .outer-ring:hover { opacity: 0.85; }
+
+  .inner-circle {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .btn-label {
+    font-size: 11px;
+    color: var(--bg);
+    letter-spacing: 3px;
+    font-weight: 700;
+  }
+
+  /* Recording state */
+  .screen.recording .inner-circle { transform: scale(0.78); background: var(--accent-deep); }
+  .screen.recording .outer-ring   { border-color: var(--accent-deep); }
+  .screen.recording .pulse-ring   { border-color: var(--accent-deep); display: block; }
+  .screen:not(.recording) .pulse-ring { display: none; }
+
+  /* ── Playback section */
+  .section-divider {
+    width: 100%; height: 1px;
+    background: var(--border-lt);
+  }
+  .section-lbl {
+    font-size: 9px;
+    color: var(--ink-faint);
+    letter-spacing: 3px;
+    align-self: flex-start;
+  }
+
+  .playback-area { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Waveform bar */
+  .waveform {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 40px;
+    width: 100%;
+  }
+  .wf-bar {
+    flex: 1;
+    border-radius: 2px;
+    background: var(--highlight);
+    transition: height 0.1s;
+  }
+  .wf-bar.filled { background: var(--accent); }
+
+  .time-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .time-txt {
+    font-size: 9px;
+    color: var(--ink-faint);
+  }
+
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 8px;
+  }
+
+  .icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 52px;
+    cursor: pointer;
+  }
+  .icon-btn span:first-child { font-size: 18px; color: var(--ink-light); }
+  .icon-lbl { font-size: 8px; color: var(--ink-faint); letter-spacing: 2px; }
+
+  .play-btn {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--accent);
+    box-shadow: 0 4px 12px rgba(42,26,14,0.15);
+    transition: all 0.2s;
+  }
+  .play-btn:hover, .play-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* ── Generate button */
+  .generate-btn {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .gen-btn-inner {
+    background: var(--accent);
+    padding: 16px 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 3px 5px 0 var(--accent-deep);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .gen-btn-inner:hover { transform: translate(1px,1px); box-shadow: 2px 4px 0 var(--accent-deep); }
+  .gen-txt { font-size: 14px; color: var(--bg); letter-spacing: 3px; font-weight: 700; }
+  .gen-note { font-size: 13px; color: var(--highlight); }
+  .gen-underline { height: 3px; background: var(--accent-deep); border-radius: 0 0 2px 2px; margin: 0 3px; }
+
+  /* ── Hint text */
+  .hint {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-align: center;
+    line-height: 1.7;
+    font-style: italic;
+    margin-top: auto;
+  }
+
+  /* ── Result screen */
+  .back-btn {
+    align-self: flex-start;
+    font-size: 10px;
+    color: var(--ink-light);
+    letter-spacing: 3px;
+    cursor: pointer;
+  }
+  .card {
+    width: 100%;
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border: 1px solid var(--border-lt);
+    box-shadow: 0 6px 20px rgba(42,26,14,0.28);
+  }
+  .card-title { font-size: 9px; color: var(--ink-faint); letter-spacing: 3px; }
+  .card-rule  { width: 40px; height: 2px; background: var(--accent); margin-top: 6px; }
+  .meta-row   { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    padding: 4px 10px;
+    background: var(--raised);
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .chip-lbl { font-size: 7px; color: var(--ink-faint); letter-spacing: 2px; }
+  .chip-val { font-size: 13px; color: var(--ink-mid); font-weight: 700; }
+
+  .big-play-btn {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent);
+    font-size: 26px; color: var(--bg);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(42,26,14,0.15);
+  }
+
+  .record-again-btn {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px; color: var(--ink-mid); letter-spacing: 3px;
+    transition: background 0.15s;
+  }
+  .record-again-btn:hover { background: var(--raised); }
+
+  .footer-txt {
+    font-size: 8px; color: var(--ink-faint);
+    letter-spacing: 1px; text-align: center;
+    margin-top: auto;
+  }
+
+  /* Loading state overlay */
+  .loading-bar {
+    width: 100%; height: 2px;
+    background: var(--highlight);
+    border-radius: 1px;
+    overflow: hidden;
+    position: relative;
+  }
+  .loading-bar-inner {
+    position: absolute; left: 0; top: 0;
+    height: 100%;
+    background: var(--accent);
+    animation: loading-sweep 1.6s ease-in-out infinite;
+  }
+  @keyframes loading-sweep {
+    0%   { left: -60%; width: 60%; }
+    50%  { left: 40%;  width: 60%; }
+    100% { left: 100%; width: 60%; }
+  }
+
+  /* Labels */
+  .screen-label {
+    position: absolute;
+    bottom: -36px;
+    left: 50%; transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--highlight);
+    letter-spacing: 3px;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  /* Toggle button (demo) */
+  .demo-toggle {
+    position: fixed;
+    bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 10px 28px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 3px 4px 0 var(--accent-deep);
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HOME — IDLE ════════════════════════════ -->
+<div style="position:relative">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen" id="homeIdle">
+
+      <div class="header">
+        <div class="wordmark">HUM</div>
+        <div class="tagline">melody into music</div>
+        <div class="pixels">
+          <div class="pixel" style="opacity:.2"></div>
+          <div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div>
+          <div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.2"></div>
+          <div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div>
+          <div class="pixel" style="opacity:.45"></div>
+        </div>
+      </div>
+
+      <div class="state-label">TAP TO RECORD</div>
+
+      <div class="record-wrap">
+        <div class="outer-ring" onclick="toggleRecord()">
+          <div class="inner-circle">
+            <span class="btn-label" id="btnLabel">HUM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hint">tap the circle<br>then hum your melody</div>
+
+    </div>
+  </div>
+  <div class="screen-label">HOME · IDLE</div>
+</div>
+
+<!-- ═══════════════════════════ HOME — RECORDING ══════════════════════════ -->
+<div style="position:relative">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen recording">
+
+      <div class="header">
+        <div class="wordmark">HUM</div>
+        <div class="tagline">melody into music</div>
+        <div class="pixels">
+          <div class="pixel" style="opacity:.2"></div>
+          <div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div>
+          <div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.2"></div>
+          <div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div>
+          <div class="pixel" style="opacity:.45"></div>
+        </div>
+      </div>
+
+      <div class="duration" id="recordTimer">00:07</div>
+      <div class="state-label">● REC</div>
+
+      <div class="record-wrap">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <div class="outer-ring">
+          <div class="inner-circle">
+            <span class="btn-label">STOP</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="state-label" style="opacity:.5">PAUSE</div>
+
+    </div>
+  </div>
+  <div class="screen-label">HOME · RECORDING</div>
+</div>
+
+<!-- ══════════════════════════ HOME — RECORDED ════════════════════════════ -->
+<div style="position:relative">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+
+      <div class="header">
+        <div class="wordmark">HUM</div>
+        <div class="tagline">melody into music</div>
+        <div class="pixels">
+          <div class="pixel" style="opacity:.2"></div><div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div><div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.2"></div><div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div><div class="pixel" style="opacity:.45"></div>
+        </div>
+      </div>
+
+      <div class="state-label">✓ READY</div>
+
+      <div class="record-wrap">
+        <div class="outer-ring">
+          <div class="inner-circle">
+            <span class="btn-label">RE-HUM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+      <div class="section-lbl">YOUR HUM</div>
+
+      <div class="playback-area">
+        <!-- Waveform -->
+        <div class="waveform" id="waveform1"></div>
+        <div class="time-row">
+          <span class="time-txt">00:00</span>
+          <span class="time-txt">00:14</span>
+        </div>
+        <div class="ctrl-row">
+          <div class="icon-btn">
+            <span>✕</span>
+            <span class="icon-lbl">DELETE</span>
+          </div>
+          <div class="play-btn">▶</div>
+          <div style="width:52px"></div>
+        </div>
+      </div>
+
+      <div class="generate-btn">
+        <div class="gen-btn-inner">
+          <span class="gen-note">♪</span>
+          <span class="gen-txt">GENERATE MUSIC</span>
+          <span class="gen-note">♪</span>
+        </div>
+        <div class="gen-underline"></div>
+      </div>
+
+    </div>
+  </div>
+  <div class="screen-label">HOME · RECORDED</div>
+</div>
+
+<!-- ═════════════════════════ HOME — GENERATING ═══════════════════════════ -->
+<div style="position:relative">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+
+      <div class="header">
+        <div class="wordmark">HUM</div>
+        <div class="tagline">melody into music</div>
+        <div class="pixels">
+          <div class="pixel" style="opacity:.2"></div><div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div><div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.2"></div><div class="pixel" style="opacity:.45"></div>
+          <div class="pixel" style="opacity:.7"></div><div class="pixel" style="opacity:.45"></div>
+        </div>
+      </div>
+
+      <div class="state-label">✓ READY</div>
+
+      <div class="record-wrap">
+        <div class="outer-ring" style="opacity:.45">
+          <div class="inner-circle" style="background:#8B6043">
+            <span class="btn-label">RE-HUM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+      <div class="section-lbl">YOUR HUM</div>
+      <div class="playback-area">
+        <div class="waveform" id="waveform2"></div>
+        <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+      </div>
+
+      <div class="generate-btn">
+        <div class="gen-btn-inner" style="background:#8B6043; box-shadow:3px 5px 0 #5C3A21">
+          <span class="gen-note" style="animation:spin 1.4s linear infinite;display:inline-block">◌</span>
+          <span class="gen-txt">GENERATING…</span>
+        </div>
+        <div class="gen-underline" style="background:#5C3A21"></div>
+      </div>
+
+    </div>
+  </div>
+  <div class="screen-label">HOME · GENERATING</div>
+</div>
+
+<!-- ════════════════════════════ RESULT SCREEN ════════════════════════════ -->
+<div style="position:relative">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+
+      <div class="back-btn">← BACK</div>
+
+      <div class="card">
+        <div>
+          <div class="card-title">YOUR COMPOSITION</div>
+          <div class="card-rule"></div>
+        </div>
+        <div class="meta-row">
+          <div class="chip"><span class="chip-lbl">KEY</span><span class="chip-val">C maj</span></div>
+          <div class="chip"><span class="chip-lbl">BPM</span><span class="chip-val">120</span></div>
+          <div class="chip"><span class="chip-lbl">FORMAT</span><span class="chip-val">WAV</span></div>
+        </div>
+
+        <!-- Animated waveform -->
+        <div class="waveform" id="resultWf"></div>
+
+        <div class="time-row">
+          <span class="time-txt">01:12</span>
+          <span class="time-txt">02:30</span>
+        </div>
+
+        <div class="ctrl-row">
+          <div class="icon-btn">
+            <span style="font-size:22px">↺</span>
+            <span class="icon-lbl">REPLAY</span>
+          </div>
+          <div class="big-play-btn">‖</div>
+          <div style="width:52px"></div>
+        </div>
+      </div>
+
+      <div class="record-again-btn">♪ HUM AGAIN</div>
+
+      <div class="footer-txt">generated by ai · powered by your melody</div>
+
+    </div>
+  </div>
+  <div class="screen-label">RESULT · PLAYING</div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.bar-anim { animation: barBounce 0.6s ease-in-out infinite alternate; }
+@keyframes barBounce {
+  from { transform: scaleY(0.4); }
+  to   { transform: scaleY(1);   }
+}
+</style>
+
+<script>
+// ── Build waveforms ───────────────────────────────────────────────────────────
+function buildWaveform(id, filledUpTo, animated) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const BARS = 32;
+  el.innerHTML = '';
+  for (let i = 0; i < BARS; i++) {
+    const seed = ((i * 7 + 3) % 11) / 10;
+    const h    = 6 + seed * 22;
+    const bar  = document.createElement('div');
+    bar.className = 'wf-bar' + (i < filledUpTo ? ' filled' : '');
+    bar.style.height = h + 'px';
+    if (animated && i < filledUpTo) {
+      bar.style.animation = `barBounce ${0.4 + (i % 5) * 0.1}s ${i * 0.02}s ease-in-out infinite alternate`;
+    }
+    el.appendChild(bar);
+  }
+}
+
+// ── Build result waveform (longer, more dramatic) ─────────────────────────────
+function buildResultWf() {
+  const el = document.getElementById('resultWf');
+  if (!el) return;
+  const BARS = 40;
+  const filledTo = 18; // playing at ~45%
+  el.innerHTML = '';
+  for (let i = 0; i < BARS; i++) {
+    const seed = ((i * 13 + 7) % 17) * 1.6;
+    const h    = 6 + seed;
+    const bar  = document.createElement('div');
+    bar.className = 'wf-bar' + (i < filledTo ? ' filled' : '');
+    bar.style.height = h + 'px';
+    if (i < filledTo) {
+      bar.style.animation = `barBounce ${0.3 + (i % 7) * 0.08}s ${i * 0.018}s ease-in-out infinite alternate`;
+    }
+    el.appendChild(bar);
+  }
+}
+
+buildWaveform('waveform1', 0,  false);
+buildWaveform('waveform2', 8,  false);
+buildResultWf();
+
+// ── Animate recording timer ───────────────────────────────────────────────────
+let secs = 7;
+setInterval(() => {
+  secs++;
+  const min = String(Math.floor(secs / 60)).padStart(2, '0');
+  const sec = String(secs % 60).padStart(2, '0');
+  const el  = document.getElementById('recordTimer');
+  if (el) el.textContent = `${min}:${sec}`;
+}, 1000);
+</script>
+
+</body>
+</html>
