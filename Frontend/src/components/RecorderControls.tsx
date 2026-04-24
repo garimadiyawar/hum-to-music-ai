@@ -165,7 +165,7 @@ export default function RecorderControls({
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-
+const Radii_full = 9999;
 const styles = StyleSheet.create({
   container: {
     alignItems:  'center',
@@ -265,4 +265,4 @@ const styles = StyleSheet.create({
   },
 });
 
-const Radii_full = 9999;
+

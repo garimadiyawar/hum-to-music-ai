@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Audio, AVPlaybackStatus } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -157,12 +157,14 @@ export function useRecorder(): RecorderAPI {
 
       if (uri) {
         // Copy to a stable filename in app's documents directory
-        const dest = FileSystem.documentDirectory + 'humming.wav';
-        await FileSystem.copyAsync({ from: uri, to: dest });
-        setRecordingUri(dest);
+        console.log("Recorded file:", uri);
+        //const dest = FileSystem.documentDirectory + 'humming.wav';
+        //await FileSystem.copyAsync({ from: uri, to: dest });
+        setRecordingUri(uri);
       }
       setState('recorded');
-    } catch {
+    } catch (err) {
+      console.log("Stop recording error:", err);
       setState('idle');
     }
   }, []);

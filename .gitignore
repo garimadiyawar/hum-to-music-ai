@@ -1,88 +1,40 @@
-# Python
+# ───────── Python ─────────
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.so
-
-# History folders
-.history/
-
-# Virtual environments
 venv/
-.venv/
 env/
+.venv/
+
+# ───────── FastAPI / backend outputs ─────────
+Backend/server_outputs/
+Backend/server_uploads/
+*.wav
+*.mid
+
+# ───────── Environment files ─────────
 .env
-.env.*
+.env.*.local
 
-# =========================
-# AI / ML project files
-# =========================
+# keep example files
+!.env.example
 
-# Model checkpoints
-checkpoints/
-*.ckpt
-*.pt
-*.pth
-*.h5
-
-# Datasets
-data/raw/
-data/datasets/
-
-# Experiment outputs
-outputs/
-results/
-
-# =========================
-# Node / Expo / React Native
-# =========================
-
+# ───────── Node / Expo ─────────
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Expo local state
+# Expo / React Native
 .expo/
-
-# Expo build output
+.expo-shared/
 dist/
-.web-build/
 
-# React Native
-android/
-ios/
-
-# =========================
-# Build artifacts
-# =========================
-build/
-dist/
-*.egg-info/
-
-# =========================
-# Jupyter
-# =========================
-.ipynb_checkpoints/
-
-# =========================
-# Editors
-# =========================
-.vscode/
-.idea/
-
-# =========================
 # OS junk
-# =========================
 .DS_Store
 Thumbs.db
 
-# =========================
-# Logs
-# =========================
-*.log
-
-*.onnx
-*.tflite
-*.safetensors
+# History folders
+.history/
+.history

@@ -1,322 +1,216 @@
+# 🎧 Hum-to-Music AI
 
-# 🎵 Hum-to-Music AI
+Turn a simple hummed melody into a fully arranged musical composition using AI.
 
-Turn a short humming recording into a **multi-instrument musical composition**.
+The system converts human humming into structured music through pitch detection, melody extraction, harmony generation, arrangement, and audio rendering — all served through a FastAPI backend and a React Native (Expo) mobile app.
 
-This project builds a modular pipeline that converts a vocal melody into a full arrangement using **audio analysis, music theory, and neural network models**.
+---
+
+## ✨ Features
+
+- 🎤 Record humming from mobile
+- 🧠 AI-based melody extraction
+- 🎼 Automatic chord generation
+- 🎹 Multi-instrument arrangement pipeline
+- 🔊 Audio rendering (WAV output)
+- 📱 Real-time mobile preview via Expo Go
+- 🌐 REST API backend (FastAPI)
+
+---
+
+## 🧠 Architecture
 
 ```
 
-Humming Audio
+Frontend (React Native + Expo)
 ↓
-Pitch Detection
+POST /generate (audio upload)
 ↓
-Melody Transcription
+FastAPI Backend
+├── Hum → Melody
+├── Melody → Chords
+├── Arrangement Generator
+├── Music Renderer
 ↓
-Chord Generation
+WAV file + metadata
 ↓
-Multi-Instrument Arrangement
+Static file served (/output)
 ↓
-MIDI Export + Audio Rendering
+Frontend playback
 
 ````
 
-The system outputs both **MIDI files and a rendered WAV song**.
+---
+
+## 🛠 Tech Stack
+
+### Backend
+- FastAPI
+- PyTorch
+- Librosa
+- PrettyMIDI
+- NumPy
+- Pydub
+
+### Frontend
+- React Native (Expo)
+- Axios
+- Expo AV / Audio APIs
 
 ---
 
-# Demo
+## 🚀 Setup Instructions
 
-Run the full pipeline on a humming recording:
+### 1. Backend
 
 ```bash
-python main.py humming.wav
-````
-
-Output:
-
-```
-outputs/
- ├── melody.mid
- ├── chords.mid
- ├── arrangement.mid
- └── song.wav
-```
-
-The system automatically:
-
-* detects pitch from the humming
-* converts it to musical notes
-* generates a chord progression
-* creates a multi-instrument arrangement
-* renders the result to audio
-
----
-
-# Example Pipeline Output
-
-Example run:
-
-```
-Detected notes: 5
-Generated chords: 3
-Tempo: 112 BPM
-Key: D minor
-Tracks generated:
-  melody
-  bass
-  piano
-  strings
-  pad
-  drums
-```
-
----
-
-# Project Architecture
-
-```
-project/
-│
-├── configs/
-│   └── model_config.yaml
-│
-├── data/
-│   ├── humming_preprocessing.py
-│   ├── dataset_loader.py
-│   └── midi_processing.py
-│
-├── models/
-│   ├── audio_encoder.py
-│   ├── melody_transcriber.py
-│   ├── harmony_generator.py
-│   ├── arrangement_model.py
-│   └── composition_transformer.py
-│
-├── inference/
-│   ├── hum_to_melody.py
-│   ├── melody_to_chords.py
-│   ├── arrangement_generator.py
-│   └── render_music.py
-│
-├── training/
-│   ├── train_transcription.py
-│   ├── train_harmony_model.py
-│   └── train_arrangement_model.py
-│
-├── utils/
-│   ├── audio_utils.py
-│   ├── pitch_detection.py
-│   ├── midi_utils.py
-│   └── music_theory.py
-│
-└── main.py
-```
-
----
-
-# Core Components
-
-## 1. Audio Processing
-
-The system extracts musical information from humming using:
-
-* mel-spectrogram analysis
-* pitch detection (YIN / pYIN / CREPE)
-* note segmentation
-* key estimation
-* tempo detection
-
-Libraries used include **librosa** and **CREPE**.
-
----
-
-## 2. Melody Transcription
-
-Transforms the audio pitch signal into discrete note events.
-
-Architecture:
-
-```
-Mel Spectrogram
-      ↓
-CNN Encoder
-      ↓
-Transformer
-      ↓
-MIDI Note Tokens
-```
-
-If no trained model checkpoint exists, the system falls back to a signal-processing transcription pipeline.
-
----
-
-## 3. Harmony Generation
-
-Predicts chords from the melody.
-
-```
-Melody Tokens
-      ↓
-Transformer Encoder
-      ↓
-Chord Predictions
-```
-
-Fallback rule-based harmony uses:
-
-* detected key
-* scale-compatible chords
-* common progressions
-
----
-
-## 4. Arrangement Generation
-
-Creates a full arrangement from melody + chords.
-
-Generated tracks:
-
-* melody
-* bass
-* piano
-* strings
-* pad
-* drums
-
-The system can use either:
-
-* a sequence model
-* or a deterministic rule-based composer.
-
----
-
-## 5. Audio Rendering
-
-The MIDI arrangement can be rendered using:
-
-1. SoundFonts (recommended)
-
-or
-
-2. a pure-Python synthesizer fallback.
-
-For high-quality audio rendering install **FluidSynth**.
-
----
-
-# Installation
-
-Create a virtual environment:
-
-```bash
+cd Backend
 python -m venv venv
-```
-
-Activate it:
-
-Windows
-
-```bash
 venv\Scripts\activate
-```
-
-Install dependencies:
-
-```bash
 pip install -r requirements.txt
+python server.py
+````
+
+Run server:
+
 ```
-
-Optional (better audio rendering):
-
-Install **FluidSynth** and download a `.sf2` SoundFont.
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
 
 ---
 
-# Running the Demo
-
-Run with a humming recording:
+### 2. Frontend
 
 ```bash
-python main.py humming.wav
+cd Frontend
+npm install
+npx expo start --clear
 ```
 
-Optional parameters:
+Make sure `.env` contains:
 
 ```
---pitch_method crepe
---tempo 120
---song_style pop
---output_dir results
+EXPO_PUBLIC_API_URL=http://<YOUR_LAPTOP_IP>:8000
 ```
 
 ---
 
-# Training Models
+## 📁 Project Structure
 
-The repository includes training pipelines for three models:
+```
+hum-to-music-ai/
+│
+├── Backend/
+│   ├── server.py
+│   ├── inference/
+│   ├── utils/
+│   ├── server_outputs/
+│   ├── server_uploads/
+│   └── .env
+│
+├── Frontend/
+│   ├── App.js / screens/
+│   ├── api.ts
+│   ├── .env
+│   └── package.json
+│
+└── README.md
+```
 
-| Model              | Task                     |
-| ------------------ | ------------------------ |
-| Melody Transcriber | audio → melody           |
-| Harmony Generator  | melody → chords          |
-| Arrangement Model  | melody + chords → tracks |
+---
 
-Datasets commonly used:
+## ⚠️ Notes
 
-| Dataset   |
-| --------- |
-| MAESTRO   |
-| Lakh MIDI |
-| MedleyDB  |
+* Must run both devices on the same WiFi network
+* Use LAN IP (not localhost) for API connection
+* Windows Firewall may block ports 8000 and 8081
+* Audio rendering is CPU-based (no GPU required for inference stage)
 
-Example training command:
+---
+
+## 🧪 API Endpoints
+
+### Health Check
+
+```
+GET /health
+```
+
+### Generate Music
+
+```
+POST /generate
+FormData: file (audio/wav or audio/m4a)
+```
+
+Response:
+
+```json
+{
+  "song_url": "http://<ip>:8000/output/file.wav",
+  "duration": 12.4,
+  "key": "C major",
+  "tempo": 110
+}
+```
+
+---
+
+## 💡 Future Improvements
+
+* Replace sine renderer with real instrument soundfonts
+* Add real-time waveform visualization
+* Improve pitch detection robustness
+* Add genre conditioning (lofi, cinematic, pop)
+* Cloud deployment (Render / AWS)
+
+---
+
+## ⚡ Status
+
+MVP working:
+✔ Audio recording
+✔ Backend pipeline
+✔ Music generation
+✔ File serving
+
+In progress:
+⚠ Network stability (Expo + LAN setup)
+
+````
+
+---
+
+# 🧼 3. Small repo cleanup advice (important but quick)
+
+Before pushing:
+
+### Do this:
 
 ```bash
-python main.py --train transcription
-```
+git status
+````
 
-Checkpoints are saved to:
+Make sure you are NOT about to commit:
 
-```
-checkpoints/
+* `venv/`
+* `node_modules/`
+* `server_outputs/`
+* `.env`
+
+If you see them staged → remove:
+
+```bash
+git rm -r --cached venv
+git rm -r --cached node_modules
 ```
 
 ---
 
-# Dependencies
+# 🚀 When you're ready to push
 
-Core libraries:
-
-* PyTorch
-* torchaudio
-* librosa
-* pretty_midi
-* soundfile
-* PyYAML
-* tensorboard
-* tqdm
-
-Optional:
-
-* CREPE (neural pitch detection)
-* FluidSynth (audio rendering)
-
----
-
-# License
-
-MIT License.
-
----
-
-# Motivation
-
-Most music AI tools require **MIDI input or symbolic music**.
-
-This project explores the harder problem:
-
-**converting raw human humming into structured music.**
-
-It combines **audio signal processing, music theory, and machine learning** into a unified pipeline.
-
+```bash
+git add .
+git commit -m "Initial working MVP: hum-to-music AI pipeline + mobile integration"
+git push origin main
+```

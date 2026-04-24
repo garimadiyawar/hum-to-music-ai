@@ -38,3 +38,8 @@ crepe>=0.0.13          # CNN-based pitch detection
 # ─── Packaging ───────────────────────────────────────────────────────────────
 click>=8.1.0
 loguru>=0.7.0
+
+# ─── Server / API ───────────────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9

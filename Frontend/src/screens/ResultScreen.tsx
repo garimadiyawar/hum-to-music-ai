@@ -18,6 +18,8 @@ import { Colors, Spacing, Typography, Shadows } from '../styles/theme';
 import { RootStackParamList } from '../../App';
 import { formatDuration } from '../hooks/useRecorder';
 
+import { saveSong } from '../hooks/useSavedFiles';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type NavProp   = NativeStackNavigationProp<RootStackParamList, 'Result'>;
@@ -33,14 +35,15 @@ type PlayState = 'idle' | 'loading' | 'playing' | 'paused' | 'finished';
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ResultScreen({ navigation, route }: Props) {
-  const { songUrl, duration, key: songKey, tempo } = route.params;
+  const { songUrl, humUri, duration, key: songKey, tempo } = route.params;
   const toast = useToast();
 
   const [playState,   setPlayState]   = useState<PlayState>('idle');
   const [positionMs,  setPositionMs]  = useState(0);
   const [durationMs,  setDurationMs]  = useState((duration ?? 0) * 1000);
   const soundRef                       = useRef<Audio.Sound | null>(null);
-
+  const humSoundRef  = useRef<Audio.Sound | null>(null);
+  const [humPlaying, setHumPlaying] = useState(false);
   // ── Entry animations ──────────────────────────────────────────────────────
   const cardScale   = useRef(new Animated.Value(0.88)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
@@ -58,6 +61,7 @@ export default function ResultScreen({ navigation, route }: Props) {
   useEffect(() => {
     return () => {
       soundRef.current?.unloadAsync().catch(() => {});
+      humSoundRef.current?.unloadAsync().catch(() => {});
     };
   }, []);
 
@@ -128,6 +132,32 @@ export default function ResultScreen({ navigation, route }: Props) {
     setPlayState('playing');
   }, [loadAndPlay]);
 
+  const handlePlayHum = useCallback(async () => {
+  if (!humUri) return;
+  if (humPlaying) {
+    await humSoundRef.current?.pauseAsync();
+    setHumPlaying(false);
+    return;
+  }
+  if (humSoundRef.current) {
+    await humSoundRef.current.stopAsync();
+    await humSoundRef.current.setPositionAsync(0);
+    await humSoundRef.current.playAsync();
+    setHumPlaying(true);
+    return;
+  }
+  await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
+  const { sound } = await Audio.Sound.createAsync(
+    { uri: humUri },
+    { shouldPlay: true },
+    (status: AVPlaybackStatus) => {
+      if (status.isLoaded && status.didJustFinish) setHumPlaying(false);
+    },
+  );
+  humSoundRef.current = sound;
+  setHumPlaying(true);
+}, [humUri, humPlaying]);
+
   // ── Derived ───────────────────────────────────────────────────────────────
   const progress = durationMs > 0 ? positionMs / durationMs : 0;
   const isPlaying = playState === 'playing';
@@ -150,6 +180,26 @@ export default function ResultScreen({ navigation, route }: Props) {
         >
           <Text style={styles.backText}>← BACK</Text>
         </TouchableOpacity>
+
+        {/* ── Original hum card ────────────────────────────────────── */}
+        <Animated.View style={[styles.card, { opacity: cardOpacity, transform: [{ scale: cardScale }, { translateY: cardY }] }]}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>YOUR HUM</Text>
+            <View style={[styles.headerRule, { backgroundColor: Colors.accentWarm }]} />
+          </View>
+          <View style={styles.controls}>
+            <View style={styles.sideBtn} />
+            <TouchableOpacity
+              onPress={handlePlayHum}
+              style={[styles.playBtn, humPlaying && styles.playBtnActive]}
+            >
+              <Text style={[styles.playBtnIcon, humPlaying && styles.playBtnIconActive]}>
+                {humPlaying ? '‖' : '▶'}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.sideBtn} />
+          </View>
+        </Animated.View>
 
         {/* ── Card ──────────────────────────────────────────────────── */}
         <Animated.View
@@ -210,6 +260,21 @@ export default function ResultScreen({ navigation, route }: Props) {
             <View style={styles.sideBtn} />
           </View>
         </Animated.View>
+
+        {/* ── Save button ──────────────────────────────────────────── */}
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={async () => {
+            try {
+              await saveSong({ songUrl, humUri, duration, key: songKey, tempo });
+              toast.show('Saved! ♪', 'success');
+            } catch {
+              toast.show('Could not save.', 'error');
+            }
+          }}
+        >
+          <Text style={styles.saveBtnText}>SAVE ♪</Text>
+        </TouchableOpacity>
 
         {/* ── Record again ──────────────────────────────────────────── */}
         <TouchableOpacity
@@ -332,7 +397,21 @@ const styles = StyleSheet.create({
     color:         Colors.inkLight,
     letterSpacing: Typography.letterSpacingWide,
   },
-
+  saveBtn: {
+    width: '100%',
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surfaceRaised,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  saveBtnText: {
+    fontFamily: Typography.fontMono,
+    fontSize: Typography.sizeMD,
+    color: Colors.inkMid,
+    letterSpacing: Typography.letterSpacingWide,
+  },
   // ── Card ──────────────────────────────────────────────────────────────────
 
   card: {

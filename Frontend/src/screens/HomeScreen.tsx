@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  TouchableOpacity,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -17,7 +18,7 @@ import ToastMessage     from '../components/ToastMessage';
 
 import { useRecorder } from '../hooks/useRecorder';
 import { useToast }    from '../hooks/useToast';
-import { generateMusic, getErrorMessage } from '../services/api';
+import { generateMusic, pingServer, getErrorMessage } from '../services/api';
 import { Colors, Spacing, Typography } from '../styles/theme';
 import { RootStackParamList } from '../../App';
 
@@ -35,8 +36,7 @@ export default function HomeScreen({ navigation }: Props) {
   const recorder = useRecorder();
   const toast    = useToast();
 
-  const [generating, setGenerating]   = useState(false);
-  const [uploadPct,   setUploadPct]   = useState(0);
+  const [serverOnline,  setServerOnline]  = useState<boolean | null>(null);
 
   // ── Entry animation ───────────────────────────────────────────────────────
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -44,10 +44,25 @@ export default function HomeScreen({ navigation }: Props) {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(headerOpacity, { toValue: 1, duration: 600, delay: 100, useNativeDriver: true }),
-      Animated.timing(headerY,       { toValue: 0, duration: 600, delay: 100, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(headerOpacity, {
+        toValue: 1, duration: 600, delay: 100, useNativeDriver: true,
+      }),
+      Animated.timing(headerY, {
+        toValue: 0, duration: 600, delay: 100,
+        easing: Easing.out(Easing.cubic), useNativeDriver: true,
+      }),
     ]).start();
   }, [headerOpacity, headerY]);
+
+  // ── Ping server on mount ──────────────────────────────────────────────────
+  useEffect(() => {
+    pingServer().then((ok) => {
+      setServerOnline(ok);
+      if (!ok) {
+        toast.show('Server unreachable — check your .env IP address', 'error');
+      }
+    });
+  }, []);
 
   // ── Permission error feedback ─────────────────────────────────────────────
   useEffect(() => {
@@ -57,35 +72,16 @@ export default function HomeScreen({ navigation }: Props) {
   }, [recorder.permissionError]);
 
   // ── Generate music ────────────────────────────────────────────────────────
-  const handleGenerate = useCallback(async () => {
+  // REPLACE handleGenerate with:
+  const handleGenerate = useCallback(() => {
     if (!recorder.recordingUri) return;
-
-    setGenerating(true);
-    setUploadPct(0);
-
-    try {
-      const result = await generateMusic(recorder.recordingUri, (pct) => {
-        setUploadPct(pct);
-      });
-
-      navigation.navigate('Result', {
-        songUrl:   result.song_url,
-        duration:  result.duration,
-        key:       result.key,
-        tempo:     result.tempo,
-      });
-    } catch (err) {
-      toast.show(getErrorMessage(err), 'error');
-    } finally {
-      setGenerating(false);
-      setUploadPct(0);
-    }
-  }, [recorder.recordingUri, navigation, toast]);
+    navigation.navigate('Loading', { recordingUri: recorder.recordingUri });
+  }, [recorder.recordingUri, navigation]);
 
   // ── Derived booleans ──────────────────────────────────────────────────────
   const showPlayback = recorder.hasRecording || recorder.state === 'playing';
-  const showGenerate = showPlayback && !generating;
-  const canGenerate  = showPlayback && !generating && recorder.state !== 'playing';
+  const showGenerate = showPlayback ;
+  const canGenerate  = showPlayback && recorder.state !== 'playing';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -96,19 +92,43 @@ export default function HomeScreen({ navigation }: Props) {
       >
         {/* ── Header ─────────────────────────────────────────────────── */}
         <Animated.View
-          style={[styles.header, { opacity: headerOpacity, transform: [{ translateY: headerY }] }]}
+          style={[
+            styles.header,
+            { opacity: headerOpacity, transform: [{ translateY: headerY }] },
+          ]}
         >
           <Text style={styles.wordmark}>HUM</Text>
           <Text style={styles.tagline}>melody into music</Text>
+
           {/* Decorative pixel row */}
           <View style={styles.pixelRow}>
             {Array.from({ length: 8 }, (_, i) => (
-              <View
-                key={i}
-                style={[styles.pixel, { opacity: 0.2 + (i % 3) * 0.25 }]}
-              />
+              <View key={i} style={[styles.pixel, { opacity: 0.2 + (i % 3) * 0.25 }]} />
             ))}
           </View>
+
+          {/* Saved files button */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SavedFiles')}
+            style={styles.savedBtn}
+          >
+            <Text style={styles.savedBtnText}>SAVED ♪</Text>
+          </TouchableOpacity>
+
+          {/* Server status indicator */}
+          {serverOnline !== null && (
+            <View style={styles.serverStatus}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: serverOnline ? Colors.success : Colors.danger },
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {serverOnline ? 'SERVER ONLINE' : 'SERVER OFFLINE'}
+              </Text>
+            </View>
+          )}
         </Animated.View>
 
         {/* ── Record controls ─────────────────────────────────────────── */}
@@ -123,7 +143,7 @@ export default function HomeScreen({ navigation }: Props) {
           />
         </View>
 
-        {/* ── Playback controls (shown once something is recorded) ─────── */}
+        {/* ── Playback controls ────────────────────────────────────────── */}
         {showPlayback && (
           <Animated.View style={styles.playbackSection}>
             <View style={styles.sectionDivider} />
@@ -144,9 +164,8 @@ export default function HomeScreen({ navigation }: Props) {
           <View style={styles.generateSection}>
             <GenerateButton
               onPress={handleGenerate}
-              loading={generating}
+              loading={false}
               disabled={!canGenerate}
-              progress={uploadPct}
             />
           </View>
         )}
@@ -159,7 +178,6 @@ export default function HomeScreen({ navigation }: Props) {
         )}
       </ScrollView>
 
-      {/* ── Toast ─────────────────────────────────────────────────────── */}
       <ToastMessage toast={toast.toast} opacity={toast.opacity} />
     </SafeAreaView>
   );
@@ -169,24 +187,32 @@ export default function HomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   safe: {
-    flex:            1,
+    flex: 1,
     backgroundColor: Colors.background,
   },
-
   scroll: {
-    flexGrow:        1,
+    flexGrow: 1,
     paddingHorizontal: Spacing.xl,
-    paddingTop:      Spacing.xl,
-    paddingBottom:   Spacing.xxl,
-    alignItems:      'center',
-    gap:              Spacing.xl,
-  },
-
-  // ── Header
-  header: {
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xxl,
     alignItems: 'center',
-    gap:         Spacing.xs,
+    gap: Spacing.xl,
   },
+  savedBtn: {
+  marginTop: Spacing.sm,
+  paddingVertical: 4,
+  paddingHorizontal: Spacing.md,
+  borderWidth: 1,
+  borderColor: Colors.border,
+  borderRadius: 4,
+  },
+  savedBtnText: {
+    fontFamily: Typography.fontMono,
+    fontSize: Typography.sizeXS,
+    color: Colors.inkLight,
+    letterSpacing: Typography.letterSpacingWide,
+  },
+  header: { alignItems: 'center', gap: Spacing.xs },
 
   wordmark: {
     fontFamily:    Typography.fontDisplay,
@@ -195,51 +221,59 @@ const styles = StyleSheet.create({
     letterSpacing: 18,
     fontStyle:     'italic',
   },
-
   tagline: {
     fontFamily:    Typography.fontMono,
     fontSize:      Typography.sizeXS,
     color:         Colors.inkFaint,
     letterSpacing: Typography.letterSpacingWide,
-    textTransform: 'lowercase',
   },
-
   pixelRow: {
     flexDirection: 'row',
-    gap:            4,
-    marginTop:      Spacing.xs,
+    gap: 4,
+    marginTop: Spacing.xs,
   },
-
   pixel: {
-    width:           6,
-    height:          6,
+    width: 6,
+    height: 6,
     backgroundColor: Colors.accent,
   },
 
-  // ── Sections
+  serverStatus: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            6,
+    marginTop:      Spacing.xs,
+  },
+  statusDot: {
+    width: 6, height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontFamily:    Typography.fontMono,
+    fontSize:      9,
+    color:         Colors.inkFaint,
+    letterSpacing: Typography.letterSpacingWide,
+  },
+
   recordSection: {
-    alignItems:  'center',
-    paddingTop:   Spacing.lg,
-  },
-
-  playbackSection: {
-    width:      '100%',
     alignItems: 'center',
-    gap:         Spacing.md,
+    paddingTop: Spacing.lg,
   },
-
+  playbackSection: {
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
   generateSection: {
-    width:      '100%',
+    width: '100%',
     alignItems: 'center',
     paddingTop: Spacing.sm,
   },
-
   sectionDivider: {
-    width:           '100%',
-    height:           1,
+    width: '100%',
+    height: 1,
     backgroundColor: Colors.borderLight,
   },
-
   sectionLabel: {
     fontFamily:    Typography.fontMono,
     fontSize:      Typography.sizeXS,
@@ -247,14 +281,13 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingWide,
     alignSelf:     'flex-start',
   },
-
   hint: {
-    fontFamily:  Typography.fontDisplay,
-    fontSize:    Typography.sizeSM,
-    color:       Colors.inkFaint,
-    textAlign:   'center',
-    lineHeight:  22,
-    fontStyle:   'italic',
-    marginTop:   Spacing.xl,
+    fontFamily: Typography.fontDisplay,
+    fontSize:   Typography.sizeSM,
+    color:      Colors.inkFaint,
+    textAlign:  'center',
+    lineHeight: 22,
+    fontStyle:  'italic',
+    marginTop:  Spacing.xl,
   },
 });
