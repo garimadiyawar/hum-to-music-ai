@@ -176,5 +176,3 @@ MVP working:
 
 In progress:
 ⚠ Network stability (Expo + LAN setup)
-
-````
