@@ -178,39 +178,3 @@ In progress:
 ⚠ Network stability (Expo + LAN setup)
 
 ````
-
----
-
-# 🧼 3. Small repo cleanup advice (important but quick)
-
-Before pushing:
-
-### Do this:
-
-```bash
-git status
-````
-
-Make sure you are NOT about to commit:
-
-* `venv/`
-* `node_modules/`
-* `server_outputs/`
-* `.env`
-
-If you see them staged → remove:
-
-```bash
-git rm -r --cached venv
-git rm -r --cached node_modules
-```
-
----
-
-# 🚀 When you're ready to push
-
-```bash
-git add .
-git commit -m "Initial working MVP: hum-to-music AI pipeline + mobile integration"
-git push origin main
-```
